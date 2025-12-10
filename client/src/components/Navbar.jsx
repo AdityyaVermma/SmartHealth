@@ -59,7 +59,7 @@ const Navbar = () => {
                 <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', height: '70px' }}>
                     {[
                         { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-                        { path: '/report', icon: FilePlus, label: 'Report', roles: ['community', 'health_worker', 'admin', 'national_admin'] },
+                        { path: '/report', icon: FilePlus, label: 'Report', roles: ['health_worker', 'admin', 'national_admin'] },
                         { path: '/alerts', icon: AlertTriangle, label: 'Alerts', roles: ['community', 'health_worker', 'admin', 'national_admin'] },
                         { path: '/users', icon: Users, label: 'Users', roles: ['admin', 'national_admin'] },
                         { path: '/resources', icon: BookOpen, label: 'Resources' }
