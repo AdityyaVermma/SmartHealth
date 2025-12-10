@@ -1,0 +1,7 @@
+Place your video file here!
+
+1. Download a video (mp4 format).
+2. Rename it to: ne-nature.mp4
+3. Paste it in this folder.
+
+The dashboard will automatically play it!

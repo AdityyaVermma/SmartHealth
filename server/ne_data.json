@@ -1,0 +1,115 @@
+{
+    "reports": [
+        {
+            "location": "Guwahati",
+            "state": "Assam",
+            "severity": "High",
+            "waterSource": "River",
+            "symptoms": [
+                "Fever",
+                "Vomiting"
+            ],
+            "timestamp": "2024-03-10T10:00:00Z",
+            "registeredCases": 12
+        },
+        {
+            "location": "Shillong",
+            "state": "Meghalaya",
+            "severity": "Medium",
+            "waterSource": "Tap",
+            "symptoms": [
+                "Diarrhea"
+            ],
+            "timestamp": "2024-03-11T14:30:00Z",
+            "registeredCases": 5
+        },
+        {
+            "location": "Kohima",
+            "state": "Nagaland",
+            "severity": "Low",
+            "waterSource": "Well",
+            "symptoms": [
+                "Skin Rash"
+            ],
+            "timestamp": "2024-03-12T09:15:00Z",
+            "registeredCases": 3
+        },
+        {
+            "location": "Tezpur",
+            "state": "Assam",
+            "severity": "High",
+            "waterSource": "Pond",
+            "symptoms": [
+                "Fever"
+            ],
+            "timestamp": "2024-03-13T11:20:00Z",
+            "registeredCases": 8
+        },
+        {
+            "location": "Imphal",
+            "state": "Manipur",
+            "severity": "Medium",
+            "waterSource": "River",
+            "symptoms": [
+                "Typhoid"
+            ],
+            "timestamp": "2024-03-14T16:45:00Z",
+            "registeredCases": 6
+        },
+        {
+            "location": "Aizawl",
+            "state": "Mizoram",
+            "severity": "Low",
+            "waterSource": "Rainwater",
+            "symptoms": [
+                "Stomach Ache"
+            ],
+            "timestamp": "2024-03-15T08:30:00Z",
+            "registeredCases": 2
+        },
+        {
+            "location": "Gangtok",
+            "state": "Sikkim",
+            "severity": "Low",
+            "waterSource": "Spring",
+            "symptoms": [
+                "Mild Fever"
+            ],
+            "timestamp": "2024-03-15T10:00:00Z",
+            "registeredCases": 1
+        },
+        {
+            "location": "Agartala",
+            "state": "Tripura",
+            "severity": "Medium",
+            "waterSource": "Tap",
+            "symptoms": [
+                "Dysentery"
+            ],
+            "timestamp": "2024-03-16T12:00:00Z",
+            "registeredCases": 4
+        },
+        {
+            "location": "Itanagar",
+            "state": "Arunachal Pradesh",
+            "severity": "High",
+            "waterSource": "Stream",
+            "symptoms": [
+                "Malaria"
+            ],
+            "timestamp": "2024-03-16T14:00:00Z",
+            "registeredCases": 7
+        },
+        {
+            "location": "Silchar",
+            "state": "Assam",
+            "severity": "Medium",
+            "waterSource": "Pond",
+            "symptoms": [
+                "Fever"
+            ],
+            "timestamp": "2024-03-17T09:30:00Z",
+            "registeredCases": 5
+        }
+    ]
+}
