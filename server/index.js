@@ -25,6 +25,7 @@ const User = require('./models/User');
 const Report = require('./models/Report');
 const Alert = require('./models/Alert');
 const ContactGroup = require('./models/ContactGroup');
+const SupportTicket = require('./models/SupportTicket');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -415,7 +416,6 @@ app.get('/api/stats', async (req, res) => {
 
 // ============ ALERTS ROUTES ============
 
-// Get all alerts (Protected: Requires Health Worker or Admin role)
 // Get all alerts (Protected: Authenticated users)
 app.get('/api/alerts', authenticate, authorize(ROLES.COMMUNITY, ROLES.HEALTH_WORKER, ROLES.ADMIN, ROLES.NATIONAL_ADMIN), async (req, res) => {
     try {
@@ -456,10 +456,7 @@ app.get('/api/alerts', authenticate, authorize(ROLES.COMMUNITY, ROLES.HEALTH_WOR
                 message: `High number of reports (${loc.count}) in ${loc._id}. Potential outbreak detected.`,
                 reportCount: loc.count,
                 isActive: true,
-                status: 'pending', // Auto-alerts start as pending for review? or active? Let's say active/pending.
-                // Actually, if we want them to show up in "active alerts" for officials, let's keep them as 'approved' (system approved) or 'pending' if we want manual review.
-                // For simplicity, let's make them 'approved' system alerts for now, or just 'active'.
-                // Frontend defaults status to 'approved' if undefined.
+                status: 'pending',
                 createdAt: new Date()
             }));
         }
@@ -474,8 +471,6 @@ app.get('/api/alerts', authenticate, authorize(ROLES.COMMUNITY, ROLES.HEALTH_WOR
     }
 });
 
-// Create new alert (Protected: Health Worker or Admin)
-// Mock Broadcast Service
 // Mock Broadcast Service
 const mockBroadcast = async (alert, channels, audience) => {
     console.log(`\n[BROADCAST SYSTEM] Processing Alert Broadcast for: ${alert.location}`);
@@ -738,6 +733,88 @@ app.patch('/api/alerts/:id', authenticate, authorize(ROLES.HEALTH_WORKER, ROLES.
     } catch (error) {
         console.error('Update alert error:', error);
         res.status(500).json({ error: 'Server error updating alert' });
+    }
+});
+
+// ============ SUPPORT ROUTES ============
+
+// Create new support ticket
+app.post('/api/support', authenticate, async (req, res) => {
+    try {
+        const { message, type } = req.body;
+        if (!message) return res.status(400).json({ error: 'Message is required' });
+
+        const ticket = await SupportTicket.create({
+            userId: req.user.userId,
+            message,
+            type: type || 'support',
+            messages: [{
+                senderId: req.user.userId,
+                text: message
+            }]
+        });
+
+        res.status(201).json(ticket);
+    } catch (error) {
+        console.error('Create ticket error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Get tickets (User sees own, Admin sees all)
+app.get('/api/support', authenticate, async (req, res) => {
+    try {
+        let query = {};
+        if (req.user.role !== ROLES.ADMIN && req.user.role !== ROLES.NATIONAL_ADMIN) {
+            query.userId = req.user.userId;
+        }
+
+        const tickets = await SupportTicket.find(query)
+            .populate('userId', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json(tickets);
+    } catch (error) {
+        console.error('Get tickets error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Add message to ticket (Reply)
+app.post('/api/support/:id/messages', authenticate, async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) return res.status(400).json({ error: 'Message text is required' });
+
+        const ticket = await SupportTicket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        // Authorization: Creator or Admin
+        const isAdmin = req.user.role === ROLES.ADMIN || req.user.role === ROLES.NATIONAL_ADMIN;
+        if (!isAdmin && ticket.userId.toString() !== req.user.userId) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        ticket.messages.push({
+            senderId: req.user.userId,
+            text,
+            timestamp: new Date()
+        });
+
+        // If admin replies, maybe mark as in_progress or resolved?
+        if (isAdmin && ticket.status === 'open') {
+            ticket.status = 'in_progress';
+        }
+
+        await ticket.save();
+
+        // Re-populate to return full object
+        await ticket.populate('userId', 'name email');
+
+        res.json(ticket);
+    } catch (error) {
+        console.error('Reply ticket error:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 

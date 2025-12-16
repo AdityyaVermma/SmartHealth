@@ -15,6 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import Users from './components/Users';
 import VillageReports from './components/VillageReports';
+import SupportChat from './components/SupportChat';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
                 } />
               </Routes>
             </main>
+            <SupportChat />
             <Footer />
           </div>
         </Router>

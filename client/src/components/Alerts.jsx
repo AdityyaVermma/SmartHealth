@@ -63,9 +63,21 @@ const Alerts = () => {
             fetch('http://localhost:5000/api/contacts', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-                .then(res => res.json())
-                .then(data => setContactGroups(data))
-                .catch(err => console.error('Failed to fetch contact groups', err));
+                .then(res => {
+                    if (!res.ok) throw new Error('Unsuccessful response');
+                    return res.json();
+                })
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        setContactGroups(data);
+                    } else {
+                        setContactGroups([]);
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to fetch contact groups', err);
+                    setContactGroups([]);
+                });
         }
     }, [token, isAdmin, isHealthWorker]);
 
