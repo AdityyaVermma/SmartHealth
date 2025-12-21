@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Trash2, Phone, Mail, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 const Contacts = () => {
     const { token, user } = useAuth();
@@ -22,7 +23,7 @@ const Contacts = () => {
 
     const fetchGroups = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/contacts', {
+            const res = await fetch(`${API_URL}/api/contacts`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -40,7 +41,7 @@ const Contacts = () => {
         try {
             const contactsList = formData.contactsString.split(',').map(s => s.trim()).filter(Boolean);
 
-            const res = await fetch('http://localhost:5000/api/contacts', {
+            const res = await fetch(`${API_URL}/api/contacts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,7 +69,7 @@ const Contacts = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this group?')) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
+            const res = await fetch(`${API_URL}/api/contacts/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

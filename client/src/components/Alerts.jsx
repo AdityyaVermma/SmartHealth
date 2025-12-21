@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle, ShieldCheck, Send, AlertCircle, AlertOctagon, Search, Filter, Bell, FileText, Check, Mail, MessageSquare, Users, Trash2, X, Plus, Activity, ChevronRight, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import alertImage from '../assets/alert.jpg';
 
 const Alerts = () => {
@@ -85,7 +86,7 @@ const Alerts = () => {
         const fetchAlerts = async () => {
             try {
                 const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-                const res = await fetch('http://localhost:5000/api/alerts', { headers });
+                const res = await fetch(`${API_URL}/api/alerts`, { headers });
 
                 if (!res.ok) throw new Error('Failed to fetch alerts');
 
@@ -117,7 +118,7 @@ const Alerts = () => {
         const selectedChannels = Object.keys(alertForm.channels).filter(k => alertForm.channels[k]);
 
         try {
-            const res = await fetch('http://localhost:5000/api/alerts', {
+            const res = await fetch(`${API_URL}/api/alerts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ const Alerts = () => {
         const selectedChannels = Object.keys(approvalConfig.channels).filter(k => approvalConfig.channels[k]);
 
         try {
-            const res = await fetch(`http://localhost:5000/api/alerts/${approvingAlert.id}/approve`, {
+            const res = await fetch(`${API_URL}/api/alerts/${approvingAlert.id}/approve`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -214,7 +215,7 @@ const Alerts = () => {
         if (!window.confirm('Are you sure you want to delete this alert?')) return;
         setSubmitting(true);
         try {
-            const res = await fetch(`http://localhost:5000/api/alerts/${id}`, {
+            const res = await fetch(`${API_URL}/api/alerts/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -237,7 +238,7 @@ const Alerts = () => {
         if (!window.confirm('Are you sure you want to resolve this alert?')) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/api/alerts/${id}`, {
+            const res = await fetch(`${API_URL}/api/alerts/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import reportImage from '../assets/alert.jpg'; // Re-using the abstract energetic image or similar
 
 const ReportForm = () => {
@@ -62,7 +63,7 @@ const ReportForm = () => {
         }
 
         try {
-            const res = await fetch('http://localhost:5000/api/reports', {
+            const res = await fetch(`${API_URL}/api/reports`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

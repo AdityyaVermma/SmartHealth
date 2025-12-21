@@ -1,0 +1,32 @@
+[
+    {
+        "_id": "alert_001",
+        "location": "Guwahati",
+        "level": "High",
+        "message": "Outbreak of Dengue reported in Hatigaon area. Please take necessary precautions and use mosquito nets.",
+        "createdBy": "system_admin_001",
+        "isActive": true,
+        "status": "approved",
+        "approvedBy": "system_admin_001",
+        "approvedAt": "2024-03-20T10:00:00.000Z",
+        "channels": [
+            "app"
+        ],
+        "createdAt": "2024-03-20T10:00:00.000Z"
+    },
+    {
+        "_id": "alert_002",
+        "location": "Shillong",
+        "level": "Medium",
+        "message": "Water contamination detected in Ward 4 supply. Boil water before consumption.",
+        "createdBy": "system_admin_001",
+        "isActive": true,
+        "status": "approved",
+        "approvedBy": "system_admin_001",
+        "approvedAt": "2024-03-21T09:00:00.000Z",
+        "channels": [
+            "app"
+        ],
+        "createdAt": "2024-03-21T09:00:00.000Z"
+    }
+]

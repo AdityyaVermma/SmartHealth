@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Users as UsersIcon, Shield, Mail, Calendar, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 const Users = () => {
     const [users, setUsers] = useState([]);
@@ -11,7 +12,7 @@ const Users = () => {
     const { token } = useAuth();
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/users', {
+        fetch(`${API_URL}/api/users`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

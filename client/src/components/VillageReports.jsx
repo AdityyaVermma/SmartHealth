@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, MapPin, AlertTriangle, FileText, Search, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 const VillageReports = () => {
     const navigate = useNavigate();
@@ -37,7 +38,7 @@ const VillageReports = () => {
         }
 
         try {
-            const res = await fetch(`http://localhost:5000/api/reports/location/${encodeURIComponent(locationName)}`, {
+            const res = await fetch(`${API_URL}/api/reports/location/${encodeURIComponent(locationName)}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

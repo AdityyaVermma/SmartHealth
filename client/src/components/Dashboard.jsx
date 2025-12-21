@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Legend, Cell, LineChart, Line } from 'recharts';
-import { Activity, AlertTriangle, MapPin, Clock, ArrowRight, Droplets, Mountain, TrendingUp, Users, FileText, Plus, X, FilePlus, Download, Sparkles } from 'lucide-react';
+import { Activity, AlertTriangle, MapPin, Clock, ArrowRight, Droplets, Mountain, TrendingUp, Users, FileText, Plus, X, FilePlus, Download, Sparkles, Trash2 } from 'lucide-react';
 import { motion, animate, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 import neHeroImage from '../assets/ne_hero.png';
 import HealthMap from './HealthMap';
 import { useAuth } from '../context/AuthContext';
@@ -67,7 +68,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const fetchStats = () => {
-    fetch('http://localhost:5000/api/stats')
+    fetch(`${API_URL}/api/stats`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -196,7 +197,7 @@ const Dashboard = () => {
     setSubmitting(true);
     try {
       console.log('Submitting report with token:', token ? 'Token exists' : 'No token');
-      const res = await fetch('http://localhost:5000/api/reports', {
+      const res = await fetch(`${API_URL}/api/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -273,6 +274,66 @@ const Dashboard = () => {
       );
     }
     return <HealthMap />;
+  };
+
+  const handleDeleteLocation = async (locationName) => {
+    if (!isAuthenticated() || user?.role !== 'national_admin') {
+      alert('Only National Administrators can delete location data.');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete ALL reports for "${locationName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/reports/location/${encodeURIComponent(locationName)}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        alert(`Successfully deleted reports for ${locationName}`);
+        fetchStats(); // Refresh data
+      } else {
+        const data = await res.json();
+        alert(`Failed to delete: ${data.error}`);
+      }
+    } catch (err) {
+      console.error('Error deleting location:', err);
+      alert('Error connecting to server');
+    }
+  };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '12px',
+          padding: '12px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+        }}>
+          <p style={{ fontWeight: 700, marginBottom: '0.5rem' }}>{label}</p>
+          <p style={{ color: '#10b981', fontSize: '0.9rem' }}>
+            Total Cases: <span style={{ fontWeight: 600 }}>{payload[0].value}</span>
+          </p>
+          <p style={{ color: '#0ea5e9', fontSize: '0.9rem' }}>
+            Registered: <span style={{ fontWeight: 600 }}>{payload[1].value}</span>
+          </p>
+          {user?.role === 'national_admin' && (
+            <div style={{ marginTop: '0.8rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontSize: '0.8rem' }}>
+              <Trash2 size={12} />
+              <span>Click bar to delete location</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -467,16 +528,18 @@ const Dashboard = () => {
               <div style={{ display: 'flex', gap: '2rem' }}>
                 <div>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Predicted Risk Level</p>
-                  <p style={{ fontSize: '1.5rem', fontWeight: 800, color: stats.highSeverity > 10 ? '#ef4444' : '#10b981' }}>
-                    {stats.highSeverity > 20 ? 'CRITICAL' : stats.highSeverity > 10 ? 'ELEVATED' : 'STABLE'}
+                  <p style={{ fontSize: '1.5rem', fontWeight: 800, color: (stats.totalReports > 50 || stats.highSeverity > 10) ? '#ef4444' : (stats.totalReports > 20 || stats.highSeverity > 3) ? '#f59e0b' : '#10b981' }}>
+                    {(stats.totalReports > 50 || stats.highSeverity > 10) ? 'CRITICAL' : (stats.totalReports > 20 || stats.highSeverity > 3) ? 'ELEVATED' : 'STABLE'}
                   </p>
                 </div>
                 <div style={{ flex: 1, borderLeft: '1px solid var(--border-color)', paddingLeft: '2rem' }}>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Recommended Actions</p>
                   <ul style={{ paddingLeft: '1rem', margin: 0, fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: 1.6 }}>
-                    {stats.highSeverity > 10
-                      ? <li>Deploy rapid response teams to Sector 4.</li>
-                      : <li>Maintain routine surveillance protocols.</li>}
+                    {(stats.totalReports > 50 || stats.highSeverity > 10)
+                      ? <li>Deploy rapid response teams immediately.</li>
+                      : (stats.totalReports > 20 || stats.highSeverity > 3)
+                        ? <li>Increase surveillance frequency and alert local staff.</li>
+                        : <li>Maintain routine surveillance protocols.</li>}
                     <li>Verify water quality logs for current week.</li>
                   </ul>
                 </div>
@@ -550,22 +613,27 @@ const Dashboard = () => {
                         stroke="var(--border-color)"
                         allowDecimals={false}
                       />
-                      <Tooltip
-                        cursor={{ fill: 'rgba(16, 185, 129, 0.05)' }}
-                        contentStyle={{
-                          backgroundColor: 'var(--bg-card)',
-                          border: '2px solid var(--primary)',
-                          borderRadius: '12px',
-                          padding: '12px',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
-                        }}
-                      />
+                      <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(16, 185, 129, 0.05)' }} />
                       <Legend
                         wrapperStyle={{ paddingTop: '15px', fontSize: '13px', fontWeight: 600 }}
                         iconType="circle"
                       />
-                      <Bar dataKey="cases" fill="url(#casesGradient)" radius={[8, 8, 0, 0]} name="Total Cases" />
-                      <Bar dataKey="registered" fill="url(#registeredGradient)" radius={[8, 8, 0, 0]} name="Registered" />
+                      <Bar
+                        dataKey="cases"
+                        fill="url(#casesGradient)"
+                        radius={[8, 8, 0, 0]}
+                        name="Total Cases"
+                        onClick={(data) => handleDeleteLocation(data.name)}
+                        cursor={user?.role === 'national_admin' ? 'pointer' : 'default'}
+                      />
+                      <Bar
+                        dataKey="registered"
+                        fill="url(#registeredGradient)"
+                        radius={[8, 8, 0, 0]}
+                        name="Registered"
+                        onClick={(data) => handleDeleteLocation(data.name)}
+                        cursor={user?.role === 'national_admin' ? 'pointer' : 'default'}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (

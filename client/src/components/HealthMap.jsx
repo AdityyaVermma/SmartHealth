@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, CircleMarker } from 'react-leaflet';
+import { API_URL } from '../config';
 import 'leaflet/dist/leaflet.css';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, RefreshCw } from 'lucide-react';
@@ -153,7 +154,7 @@ const HealthMap = () => {
     useEffect(() => {
         const fetchAndProcessReports = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/map-data');
+                const res = await fetch(`${API_URL}/api/map-data`);
                 const data = await res.json();
                 setReports(data);
 

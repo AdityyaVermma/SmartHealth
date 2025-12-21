@@ -61,6 +61,20 @@ const authenticate = (req, res, next) => {
     next();
 };
 
+// Optional Authentication middleware (Doesn't fail if no token)
+const authenticateOptional = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        const decoded = verifyToken(token);
+        if (decoded) {
+            req.user = decoded;
+        }
+    }
+    next();
+};
+
 // Role-based authorization middleware
 const authorize = (...allowedRoles) => {
     return (req, res, next) => {
@@ -83,5 +97,6 @@ module.exports = {
     hashPassword,
     comparePassword,
     authenticate,
+    authenticateOptional,
     authorize
 };

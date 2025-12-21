@@ -1,0 +1,18 @@
+[
+    {
+        "_id": "ticket_001",
+        "userId": "community_user_001",
+        "type": "technical",
+        "message": "I am unable to submit a report for my village.",
+        "messages": [
+            {
+                "senderId": "community_user_001",
+                "text": "I am unable to submit a report for my village. It says server error.",
+                "_id": "msg_001",
+                "createdAt": "2024-03-22T10:00:00.000Z"
+            }
+        ],
+        "status": "open",
+        "createdAt": "2024-03-22T10:00:00.000Z"
+    }
+]

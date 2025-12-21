@@ -17,6 +17,7 @@ const {
     hashPassword,
     comparePassword,
     authenticate,
+    authenticateOptional,
     authorize
 } = require('./auth');
 
@@ -33,6 +34,17 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Root Route
+app.get('/', (req, res) => {
+    res.send(`
+        <div style="font-family: sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #059669;">Smart Health API is Running 🚀</h1>
+            <p>Environment: <strong>${process.env.NODE_ENV || 'development'}</strong></p>
+            <p>Database Mode: <strong>${require('./config/db').isMongoConnected() ? 'MongoDB' : 'Local JSON'}</strong></p>
+        </div>
+    `);
+});
 
 // Connect to MongoDB
 connectDB();
@@ -115,8 +127,7 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         // Update last login
-        user.lastLogin = new Date();
-        await user.save();
+        await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
 
         // Generate token
         const token = generateToken(user._id, user.role);
@@ -164,8 +175,8 @@ app.get('/api/auth/me', authenticate, async (req, res) => {
     }
 });
 
-// Get all users (Admin only)
-app.get('/api/users', authenticate, authorize(ROLES.ADMIN, ROLES.NATIONAL_ADMIN), async (req, res) => {
+// Get all users (Public)
+app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find().select('-password');
 
@@ -416,53 +427,34 @@ app.get('/api/stats', async (req, res) => {
 
 // ============ ALERTS ROUTES ============
 
-// Get all alerts (Protected: Authenticated users)
-app.get('/api/alerts', authenticate, authorize(ROLES.COMMUNITY, ROLES.HEALTH_WORKER, ROLES.ADMIN, ROLES.NATIONAL_ADMIN), async (req, res) => {
+// Get all alerts (Public - but Admins/Workers see Pending)
+app.get('/api/alerts', authenticateOptional, async (req, res) => {
     try {
         // Get active alerts from database
         let query = { isActive: true };
 
-        // If Citizen, only show approved alerts
-        if (req.user.role === ROLES.COMMUNITY) {
+        // Determine if user is privileged (Admin/Health Worker)
+        let isPrivileged = false;
+        if (req.user && [ROLES.HEALTH_WORKER, ROLES.ADMIN, ROLES.NATIONAL_ADMIN].includes(req.user.role)) {
+            isPrivileged = true;
+        }
+
+        // If NOT privileged (Public/Community), only show APPROVED alerts
+        if (!isPrivileged) {
             query.status = 'approved';
         }
+        // If privileged, they see ALL active alerts (including pending)
 
         const dbAlerts = await Alert.find(query)
             .sort({ createdAt: -1 })
             .populate('createdBy', 'name email')
             .populate('approvedBy', 'name');
 
-        // Also generate automatic alerts based on report counts (only for workers/admins)
+        // Automatic alerts are for internal use, so we skip them for public view
         let autoAlerts = [];
-        if (req.user.role !== ROLES.COMMUNITY) {
-            const locationCounts = await Report.aggregate([
-                {
-                    $group: {
-                        _id: '$location',
-                        count: { $sum: 1 }
-                    }
-                },
-                {
-                    $match: {
-                        count: { $gte: 3 }
-                    }
-                }
-            ]);
 
-            autoAlerts = locationCounts.map(loc => ({
-                id: `auto-alert-${loc._id}`,
-                location: loc._id,
-                level: loc.count >= 10 ? 'Red' : loc.count >= 5 ? 'Orange' : 'Yellow',
-                message: `High number of reports (${loc.count}) in ${loc._id}. Potential outbreak detected.`,
-                reportCount: loc.count,
-                isActive: true,
-                status: 'pending',
-                createdAt: new Date()
-            }));
-        }
-
-        // Combine database alerts and auto-generated alerts
-        const allAlerts = [...dbAlerts, ...autoAlerts];
+        // Combine
+        const allAlerts = [...autoAlerts, ...dbAlerts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         res.json(allAlerts);
     } catch (error) {
@@ -625,8 +617,11 @@ app.post('/api/alerts', authenticate, authorize(ROLES.HEALTH_WORKER, ROLES.ADMIN
         let summary;
         if (isAdmin && channels && channels.length > 0) {
             summary = await mockBroadcast(populatedAlert, channels, targetAudience);
+
+            // Update using findByIdAndUpdate
+            await Alert.findByIdAndUpdate(populatedAlert._id, { broadcastSummary: summary });
+            // Update local object for response
             populatedAlert.broadcastSummary = summary;
-            await populatedAlert.save();
         }
 
         res.status(201).json(populatedAlert);
@@ -654,20 +649,25 @@ app.patch('/api/alerts/:id/approve', authenticate, authorize(ROLES.ADMIN, ROLES.
                 targetGroups: targetGroups || []
             },
             { new: true }
-        )
-            .populate('createdBy', 'name email')
-            .populate('approvedBy', 'name');
+        );
 
         if (!alert) {
             return res.status(404).json({ error: 'Alert not found' });
         }
 
+        // Re-fetch with population to avoid hybrid model limitations with chaining on findByIdAndUpdate
+        alert = await Alert.findById(req.params.id)
+            .populate('createdBy', 'name email')
+            .populate('approvedBy', 'name');
+
         // Broadcast
         let summary;
         if (channels && channels.length > 0) {
             summary = await mockBroadcast(alert, channels, targetAudience);
-            alert.broadcastSummary = summary;
-            await alert.save();
+            // Update summary using findByIdAndUpdate instead of .save() to support hybrid/local mode
+            alert = await Alert.findByIdAndUpdate(alert._id, { broadcastSummary: summary }, { new: true })
+                .populate('createdBy', 'name email')
+                .populate('approvedBy', 'name');
         }
 
         res.json(alert);

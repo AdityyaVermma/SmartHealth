@@ -153,17 +153,32 @@ const createHybridModel = (modelName, schema) => {
         },
         aggregate: async (pipeline) => {
             if (isMongoConnected()) return MongoModel.aggregate(pipeline);
-            // Basic aggregation stub - returning empty or trying to process?
-            // Since aggregations in main app are specific, we might return mock data or basic count
-            console.log(`[LocalDB] Aggregation requested for ${modelName}`, pipeline);
 
-            // Specialized mock for 'Report' stats
+            // Manual Aggregation for Local Mode
             if (modelName === 'Report') {
-                const reports = await localDb.find('Report', {});
-                // TODO: Implement basic grouping if critical
-                // For now, return empty to prevent crash, user will see empty stats
-                return [];
+                const groupStage = pipeline.find(p => p.$group);
+
+                // Handle Location Stats Aggregation
+                if (groupStage && groupStage.$group && groupStage.$group._id === '$location') {
+                    const reports = await localDb.find('Report', {});
+                    const groups = {};
+
+                    reports.forEach(r => {
+                        const loc = r.location || 'Unknown';
+                        if (!groups[loc]) {
+                            groups[loc] = { _id: loc, totalCases: 0, registeredCases: 0 };
+                        }
+                        groups[loc].totalCases += 1;
+                        if (r.registeredCases) {
+                            groups[loc].registeredCases += parseInt(r.registeredCases);
+                        }
+                    });
+
+                    return Object.values(groups);
+                }
             }
+
+            console.log(`[LocalDB] Warning: Unsupported aggregation pipeline for ${modelName}`, pipeline);
             return [];
         }
     };
