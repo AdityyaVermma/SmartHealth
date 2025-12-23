@@ -636,7 +636,7 @@ app.patch('/api/alerts/:id/approve', authenticate, authorize(ROLES.ADMIN, ROLES.
     try {
         const { channels, targetAudience, manualPhoneNumbers, manualEmails, targetGroups } = req.body;
 
-        const alert = await Alert.findByIdAndUpdate(
+        let alert = await Alert.findByIdAndUpdate(
             req.params.id,
             {
                 status: 'approved',
@@ -665,7 +665,10 @@ app.patch('/api/alerts/:id/approve', authenticate, authorize(ROLES.ADMIN, ROLES.
         if (channels && channels.length > 0) {
             summary = await mockBroadcast(alert, channels, targetAudience);
             // Update summary using findByIdAndUpdate instead of .save() to support hybrid/local mode
-            alert = await Alert.findByIdAndUpdate(alert._id, { broadcastSummary: summary }, { new: true })
+            alert = await Alert.findByIdAndUpdate(alert._id, { broadcastSummary: summary }, { new: true });
+
+            // Re-fetch to populate
+            alert = await Alert.findById(alert._id)
                 .populate('createdBy', 'name email')
                 .populate('approvedBy', 'name');
         }
@@ -716,18 +719,21 @@ app.patch('/api/alerts/:id', authenticate, authorize(ROLES.HEALTH_WORKER, ROLES.
     try {
         const { isActive } = req.body;
 
-        const alert = await Alert.findByIdAndUpdate(
+        let alert = await Alert.findByIdAndUpdate(
             req.params.id,
             {
                 isActive,
                 resolvedAt: isActive ? null : new Date()
             },
             { new: true }
-        ).populate('createdBy', 'name email');
+        );
 
         if (!alert) {
             return res.status(404).json({ error: 'Alert not found' });
         }
+
+        // Re-fetch with population (Compatible with both Mongo and Hybrid/Local modes)
+        alert = await Alert.findById(alert._id).populate('createdBy', 'name email');
 
         res.json(alert);
     } catch (error) {

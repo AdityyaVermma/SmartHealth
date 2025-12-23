@@ -209,7 +209,8 @@ const Dashboard = () => {
           symptoms: ['Fever'],
           count: quickReportForm.cases,
           registeredCases: quickReportForm.registered,
-          state: quickReportForm.state || 'Assam'
+          state: quickReportForm.state || 'Assam',
+          waterSource: 'Other' // Default for quick report
         })
       });
 
