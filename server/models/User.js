@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ email: 1 }, { unique: true });    // ascending index on email to  make faster performance for email lookups
 userSchema.index({ role: 1 });
 
 const createHybridModel = require('../utils/createHybridModel');
