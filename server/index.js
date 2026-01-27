@@ -791,7 +791,6 @@ app.patch(
         targetGroups,
       } = req.body;
 
-<<<<<<< HEAD
       let alert = await Alert.findByIdAndUpdate(
         req.params.id,
         {
@@ -806,22 +805,6 @@ app.patch(
         },
         { new: true }
       );
-=======
-        let alert = await Alert.findByIdAndUpdate(
-            req.params.id,
-            {
-                status: 'approved',
-                approvedBy: req.user.userId,
-                approvedAt: new Date(),
-                channels: channels || [],
-                targetAudience: targetAudience || 'affected_area',
-                manualPhoneNumbers: manualPhoneNumbers || [],
-                manualEmails: manualEmails || [],
-                targetGroups: targetGroups || []
-            },
-            { new: true }
-        );
->>>>>>> 2e7f7656f58b49f9faea0541e12c734d38f81d1f
 
       if (!alert) {
         return res.status(404).json({ error: "Alert not found" });
@@ -837,7 +820,6 @@ app.patch(
      let summary;
 
         if (channels && channels.length > 0) {
-<<<<<<< HEAD
         summary = await mockBroadcast(alert, channels, targetAudience);
 
         // 1️⃣ Update only
@@ -849,16 +831,6 @@ app.patch(
         alert = await Alert.findById(alert._id)
             .populate("createdBy", "name email")
             .populate("approvedBy", "name");
-=======
-            summary = await mockBroadcast(alert, channels, targetAudience);
-            // Update summary using findByIdAndUpdate instead of .save() to support hybrid/local mode
-            alert = await Alert.findByIdAndUpdate(alert._id, { broadcastSummary: summary }, { new: true });
-
-            // Re-fetch to populate
-            alert = await Alert.findById(alert._id)
-                .populate('createdBy', 'name email')
-                .populate('approvedBy', 'name');
->>>>>>> 2e7f7656f58b49f9faea0541e12c734d38f81d1f
         }
 
       res.json(alert);
@@ -926,7 +898,6 @@ app.patch(
     try {
       const { isActive } = req.body;
 
-<<<<<<< HEAD
       const alert = await Alert.findByIdAndUpdate(
         req.params.id,
         {
@@ -935,29 +906,15 @@ app.patch(
         },
         { new: true }
       ).populate("createdBy", "name email");
-=======
-        let alert = await Alert.findByIdAndUpdate(
-            req.params.id,
-            {
-                isActive,
-                resolvedAt: isActive ? null : new Date()
-            },
-            { new: true }
-        );
->>>>>>> 2e7f7656f58b49f9faea0541e12c734d38f81d1f
 
       if (!alert) {
         return res.status(404).json({ error: "Alert not found" });
       }
 
-<<<<<<< HEAD
-      res.json(alert);
-=======
         // Re-fetch with population (Compatible with both Mongo and Hybrid/Local modes)
         alert = await Alert.findById(alert._id).populate('createdBy', 'name email');
 
         res.json(alert);
->>>>>>> 2e7f7656f58b49f9faea0541e12c734d38f81d1f
     } catch (error) {
       console.error("Update alert error:", error);
       res.status(500).json({ error: "Server error updating alert" });
