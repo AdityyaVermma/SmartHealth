@@ -33,7 +33,10 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin : "smart-health-pi.vercel.app"
+  origin : ["smart-health-pi.vercel.app",
+    "smart-health-na9jmbqp2-adityavermaasn02-4985s-projects.vercel.app"
+  ],
+  credentials : true
 }));
 app.use(express.json());
 
