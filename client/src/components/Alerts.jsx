@@ -14,6 +14,7 @@ const Alerts = () => {
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     // Contact Management State
+
     const [showContactModal, setShowContactModal] = useState(false);
     const [contactForm, setContactForm] = useState({
         name: '',
@@ -61,7 +62,7 @@ const Alerts = () => {
 
     useEffect(() => {
         if (token && (isAdmin || isHealthWorker)) {
-            fetch('http://localhost:5000/api/contacts', {
+            fetch(`${API_URL}/contacts`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => {
@@ -263,7 +264,7 @@ const Alerts = () => {
         try {
             const contactsList = contactForm.contactsString.split(',').map(s => s.trim()).filter(Boolean);
 
-            const res = await fetch('http://localhost:5000/api/contacts', {
+            const res = await fetch(`${API_URL}api/contacts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -293,7 +294,7 @@ const Alerts = () => {
     const handleDeleteContactGroup = async (id) => {
         if (!window.confirm('Are you sure you want to delete this group?')) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
+            const res = await fetch(`${API_URL}/contacts/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

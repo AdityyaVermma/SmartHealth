@@ -42,8 +42,8 @@ const ReportForm = () => {
         'River', 'Well', 'Community Well', 'Pond', 'Tap Water', 'Other'
     ];
 
-    const handleSymptomToggle = (id) => {
-        setForm(prev => ({
+    const handleSymptomToggle = (id) => {    
+        setForm(prev => ({ 
             ...prev,
             symptoms: prev.symptoms.includes(id)
                 ? prev.symptoms.filter(s => s !== id)

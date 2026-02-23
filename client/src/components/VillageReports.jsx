@@ -13,7 +13,7 @@ const VillageReports = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/stats')
+        fetch(`${API_URL}/api/stats`)
             .then(res => res.json())
             .then(data => {
                 if (data.locations) {
